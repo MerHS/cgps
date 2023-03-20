@@ -3,6 +3,12 @@ import { World } from './world'
 import { Bird } from './bird'
 import { Vector3 } from 'three'
 
+const coneGeo = new THREE.ConeGeometry(0.03, 0.1)
+coneGeo.rotateX(Math.PI / 2)
+const matcapMat = new THREE.MeshMatcapMaterial()
+const redLight = new THREE.TextureLoader().load('matcap/matcap-gold.png')
+matcapMat.matcap = redLight
+
 interface FlockSetting {
     scale: number
     visualRange: number
@@ -12,6 +18,7 @@ interface FlockSetting {
 }
 
 export class Flock {
+    world: World
     birds: Bird[]
     count: number
     center: Vector3
@@ -23,9 +30,10 @@ export class Flock {
 
     setting: FlockSetting
 
-    constructor(count: number) {
+    constructor(count: number, world: World) {
         this.count = count
         this.birds = []
+        this.world = world
 
         this.center = new Vector3()
         this.vcenter = new Vector3()
@@ -43,7 +51,10 @@ export class Flock {
         }
 
         for (let i = 0; i < count; i++) {
-            const bird = new Bird(
+            const mesh = new THREE.Mesh(coneGeo, matcapMat)
+            const bird = new Bird(mesh)
+
+            bird.mesh.position.set(
                 2 * Math.random() - 1,
                 2 * Math.random() - 1,
                 2 * Math.random() - 1
@@ -71,6 +82,7 @@ export class Flock {
 
     onUpdate(delta: number) {
         // scaling delta to 60FPS
+        const predatorPos = this.world.predator.bird.mesh.position
         const deltaScale = delta / (1 / 60)
 
         const scale = 0.5 * this.setting.scale * deltaScale
@@ -117,24 +129,34 @@ export class Flock {
             this.v2.multiplyScalar(scale * 0.3 * this.setting.separation)
             bird.velocity.add(this.v2)
 
+            this.v3.copy(pos)
+            this.v3.sub(predatorPos)
+            if (this.v3.length() < 0.5) {
+                this.v3.normalize()
+                this.v3.multiplyScalar(4 * (0.5 - this.v3.length()))
+                bird.velocity.sub(this.v3)
+            }
+
+            // limit position
             if (pos.x < 0) {
-                bird.velocity.x += 0.002
+                bird.velocity.x += 0.01
             } else if (pos.x > 2) {
-                bird.velocity.x -= 0.002
+                bird.velocity.x -= 0.01
             }
 
             if (pos.y < 0) {
-                bird.velocity.y += 0.002
+                bird.velocity.y += 0.01
             } else if (pos.y > 2) {
-                bird.velocity.y -= 0.002
+                bird.velocity.y -= 0.01
             }
 
             if (pos.z < 0) {
-                bird.velocity.z += 0.002
+                bird.velocity.z += 0.01
             } else if (pos.z > 2) {
-                bird.velocity.z -= 0.002
+                bird.velocity.z -= 0.01
             }
 
+            // limit velocity
             if (bird.velocity.length() > 0.05) {
                 bird.velocity.normalize()
                 bird.velocity.multiplyScalar(0.05)
