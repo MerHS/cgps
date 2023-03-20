@@ -11,11 +11,13 @@ export class Bird {
     mesh: THREE.Mesh
     velocity: THREE.Vector3
     lookAtPos: THREE.Vector3
+    scaleVelocity: THREE.Vector3
 
     constructor(x: number = 0, y: number = 0, z: number = 0) {
         this.mesh = new THREE.Mesh(coneGeo, matcapMat)
         this.velocity = new THREE.Vector3()
         this.lookAtPos = new THREE.Vector3()
+        this.scaleVelocity = new THREE.Vector3()
 
         this.mesh.position.x = x
         this.mesh.position.y = y
@@ -27,9 +29,15 @@ export class Bird {
     }
 
     onUpdate(delta: number) {
+        // scaling delta to 60FPS
+        const deltaScale = delta / (1 / 60)
+
         this.lookAtPos.copy(this.mesh.position)
         this.lookAtPos.add(this.velocity)
         this.mesh.lookAt(this.lookAtPos)
-        this.mesh.position.add(this.velocity)
+
+        this.scaleVelocity.copy(this.velocity)
+        this.scaleVelocity.multiplyScalar(deltaScale)
+        this.mesh.position.add(this.scaleVelocity)
     }
 }

@@ -17,7 +17,7 @@ export class World {
         this.renderer = renderer
         this.gui = gui
 
-        this.flock = new Flock(60)
+        this.flock = new Flock(300)
     }
 
     onStart() {

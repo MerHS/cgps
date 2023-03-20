@@ -47,18 +47,27 @@ let world = new World(scene, camera, renderer, gui)
 
 function matchGUI() {}
 
+let interval = 0
+const fixedDelta = 1 / 60
+
 function animate() {
-    // setInterval(() => , 1000 / 60)
     requestAnimationFrame(animate)
 
     const delta = clock.getDelta()
+    // interval += delta
 
     world.onUpdate(delta)
-
     controls.update()
     stats.update()
-
     render()
+
+    //     while (interval >= fixedDelta) {
+    //         world.onUpdate(fixedDelta)
+    //         controls.update()
+    //         stats.update()
+    //         render()
+    //         interval -= fixedDelta
+    //     }
 }
 
 function render() {
