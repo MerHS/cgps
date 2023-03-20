@@ -6,7 +6,7 @@ import { GUI } from 'dat.gui'
 import { World } from './world/world'
 
 const scene = new THREE.Scene()
-scene.add(new THREE.AxesHelper(5))
+scene.add(new THREE.AxesHelper(3))
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
 camera.position.set(5, 5, 5)
@@ -48,7 +48,9 @@ let world = new World(scene, camera, renderer, gui)
 function matchGUI() {}
 
 function animate() {
+    // setInterval(() => , 1000 / 60)
     requestAnimationFrame(animate)
+
     const delta = clock.getDelta()
 
     world.onUpdate(delta)

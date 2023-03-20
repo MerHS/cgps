@@ -35,7 +35,7 @@ export class Flock {
         this.del2 = new Vector3()
 
         this.setting = {
-            scale: 2,
+            scale: 1,
             visualRange: 1,
             coherence: 1,
             separation: 1,
@@ -49,9 +49,9 @@ export class Flock {
                 2 * Math.random() - 1
             )
             bird.velocity.set(
-                0.04 * Math.random() - 0.02,
-                0.04 * Math.random() - 0.02,
-                0.04 * Math.random() - 0.02
+                0.02 * Math.random() - 0.01,
+                0.02 * Math.random() - 0.01,
+                0.02 * Math.random() - 0.01
             )
             this.birds.push(bird)
         }
@@ -70,12 +70,13 @@ export class Flock {
     }
 
     onUpdate(delta: number) {
-        const scale = 0.5 * this.setting.scale
+        // scaling delta to 60FPS
+        const deltaScale = delta / (1 / 60)
+
+        const scale = 0.5 * this.setting.scale * deltaScale
 
         for (let bird of this.birds) {
             const pos = bird.mesh.position
-            const vel = bird.velocity.clone()
-
             const neighbor: Bird[] = []
 
             this.v2.set(0, 0, 0)
@@ -98,49 +99,48 @@ export class Flock {
                 this.vcenter.add(birdNext.velocity)
             }
 
-            this.v2.multiplyScalar(scale * 0.3 * this.setting.separation)
-            bird.velocity.add(this.v2)
-
             if (neighbor.length >= 2) {
                 this.v1.copy(this.center)
                 this.v1.divideScalar(neighbor.length)
                 this.v1.sub(pos)
                 this.v1.multiplyScalar(scale * 0.03 * this.setting.coherence)
 
-                bird.velocity.add(this.v1)
-
                 this.v3.copy(this.vcenter)
                 this.v3.divideScalar(neighbor.length)
-                this.v3.sub(vel)
+                this.v3.sub(bird.velocity)
                 this.v3.multiplyScalar(scale * 0.5 * this.setting.alignment)
 
+                bird.velocity.add(this.v1)
                 bird.velocity.add(this.v3)
             }
 
+            this.v2.multiplyScalar(scale * 0.3 * this.setting.separation)
+            bird.velocity.add(this.v2)
+
             if (pos.x < 0) {
-                bird.velocity.x += 0.005
+                bird.velocity.x += 0.002
             } else if (pos.x > 2) {
-                bird.velocity.x -= 0.005
+                bird.velocity.x -= 0.002
             }
 
             if (pos.y < 0) {
-                bird.velocity.y += 0.005
+                bird.velocity.y += 0.002
             } else if (pos.y > 2) {
-                bird.velocity.y -= 0.005
+                bird.velocity.y -= 0.002
             }
 
             if (pos.z < 0) {
-                bird.velocity.z += 0.005
+                bird.velocity.z += 0.002
             } else if (pos.z > 2) {
-                bird.velocity.z -= 0.005
+                bird.velocity.z -= 0.002
             }
 
-            if (bird.velocity.length() > 0.1) {
+            if (bird.velocity.length() > 0.05) {
                 bird.velocity.normalize()
-                bird.velocity.multiplyScalar(0.1)
+                bird.velocity.multiplyScalar(0.05)
             }
-        }
 
-        this.birds.forEach((b) => b.onUpdate(delta))
+            bird.onUpdate(delta)
+        }
     }
 }

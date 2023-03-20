@@ -131,3 +131,4 @@ out
 .DS_Store
 
 dist/client/bundle.js
+dist/server/server.js

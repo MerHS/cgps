@@ -88,31 +88,6 @@ function flyTowardsCenter(boid: Boid) {
     //     boid.vel.x += (centerX - boid.pos.x) * centeringFactor
     //     boid.vel.y += (centerY - boid.pos.y) * centeringFactor
     // }
-
-    let del2 = new Vector3(0, 0, 0)
-    let neighbor: Boid[] = []
-
-    for (let birdNext of boids) {
-        del2.subVectors(birdNext.pos, boid.pos)
-        const dist = del2.length()
-        if (dist < visualRange) {
-            neighbor.push(birdNext)
-        }
-    }
-
-    let center = new Vector3(0, 0, 0)
-    for (let birdNext of neighbor) {
-        center.add(birdNext.pos)
-    }
-
-    let v1 = center.clone()
-    if (neighbor.length >= 2) {
-        v1.divideScalar(neighbor.length)
-        v1.sub(boid.pos)
-        v1.multiplyScalar(centeringFactor)
-
-        boid.vel.add(v1)
-    }
 }
 
 // Move away from other boids that are too close to avoid colliding
