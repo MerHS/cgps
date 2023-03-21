@@ -12,6 +12,7 @@ export class Predator {
     world: World
     bird: Bird
     delta: THREE.Vector3
+    enabled: boolean
 
     constructor(world: World) {
         this.world = world
@@ -19,6 +20,7 @@ export class Predator {
 
         this.bird = new Bird(predatorMesh)
         this.delta = new THREE.Vector3()
+        this.enabled = true
 
         this.bird.mesh.position.set(
             2 * Math.random() - 1,
@@ -34,9 +36,29 @@ export class Predator {
 
     onStart(world: World) {
         this.bird.onStart(world)
+        const bird = this.bird
+
+        const folder = world.gui.addFolder('Predator')
+        const resetPosition = {
+            resetPosition() {
+                bird.mesh.position.set(
+                    2 * Math.random() - 1,
+                    2 * Math.random() - 1,
+                    2 * Math.random() - 1
+                )
+            },
+        }
+
+        folder.add(resetPosition, 'resetPosition')
+        folder.add(this, 'enabled')
+        folder.open()
     }
 
     onUpdate(delta: number) {
+        if (!this.enabled) {
+            return
+        }
+
         const pos = this.bird.mesh.position
 
         const neighbor: Bird[] = []
@@ -61,21 +83,21 @@ export class Predator {
         }
 
         if (pos.x < 0) {
-            this.bird.velocity.x += 0.002
+            this.bird.velocity.x += 0.01
         } else if (pos.x > 2) {
-            this.bird.velocity.x -= 0.002
+            this.bird.velocity.x -= 0.01
         }
 
         if (pos.y < 0) {
-            this.bird.velocity.y += 0.002
+            this.bird.velocity.y += 0.01
         } else if (pos.y > 2) {
-            this.bird.velocity.y -= 0.002
+            this.bird.velocity.y -= 0.01
         }
 
         if (pos.z < 0) {
-            this.bird.velocity.z += 0.002
+            this.bird.velocity.z += 0.01
         } else if (pos.z > 2) {
-            this.bird.velocity.z -= 0.002
+            this.bird.velocity.z -= 0.01
         }
 
         if (this.bird.velocity.length() > 0.05) {

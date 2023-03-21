@@ -21,17 +21,6 @@ document.body.appendChild(renderer.domElement)
 const stats = Stats()
 document.body.appendChild(stats.dom)
 
-const gui = new GUI()
-const controls = new OrbitControls(camera, renderer.domElement)
-
-controls.listenToKeyEvents(document.body)
-controls.keys = {
-    LEFT: 'KeyA',
-    RIGHT: 'KeyD',
-    UP: 'KeyW',
-    BOTTOM: 'KeyS',
-}
-
 window.addEventListener('resize', onWindowResize, false)
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight
@@ -43,12 +32,9 @@ function onWindowResize() {
 let clock = new THREE.Clock()
 clock.start()
 
-let world = new World(scene, camera, renderer, gui)
+let world = new World(scene, camera, renderer)
 
 function matchGUI() {}
-
-let interval = 0
-const fixedDelta = 1 / 60
 
 function animate() {
     requestAnimationFrame(animate)
@@ -57,7 +43,6 @@ function animate() {
     // interval += delta
 
     world.onUpdate(delta)
-    controls.update()
     stats.update()
     render()
 
