@@ -129,7 +129,16 @@ export class Flock {
             this.v2.multiplyScalar(scale * 0.3 * this.setting.separation)
             bird.velocity.add(this.v2)
 
-            // 4. avoid obstacle
+            // 4. follow the leader
+            if (this.world.leader.enabled) {
+                this.v3.copy(this.world.leader.mesh.position)
+                this.v3.sub(pos)
+                this.v3.normalize()
+                this.v3.multiplyScalar(0.2)
+                bird.velocity.add(this.v3)
+            }
+
+            // 5. avoid obstacle
             for (let obstacle of this.world.obstacles) {
                 this.v3.copy(pos)
                 this.v3.sub(obstacle.mesh.position)
@@ -140,7 +149,7 @@ export class Flock {
                 }
             }
 
-            // 5. avoid predator
+            // 6. avoid predator
             this.v3.copy(pos)
             this.v3.sub(predatorPos)
             if (this.v3.length() < 0.5) {

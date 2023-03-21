@@ -5,6 +5,7 @@ import { Flock } from './flock'
 import { Predator } from './predator'
 import { Obstacle } from './obstacle'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { Leader } from './leader'
 export class World {
     scene: THREE.Scene
     camera: THREE.Camera
@@ -15,6 +16,7 @@ export class World {
     flock: Flock
     predator: Predator
     obstacles: Obstacle[]
+    leader: Leader
 
     constructor(scene: THREE.Scene, camera: THREE.Camera, renderer: THREE.Renderer) {
         this.scene = scene
@@ -26,6 +28,7 @@ export class World {
         this.flock = new Flock(200, this)
         this.predator = new Predator(this)
         this.obstacles = [new Obstacle(this)]
+        this.leader = new Leader(this)
     }
 
     onStart() {
@@ -34,6 +37,7 @@ export class World {
         for (let obs of this.obstacles) {
             obs.onStart(this)
         }
+        this.leader.onStart(this)
     }
 
     onUpdate(delta: number) {
