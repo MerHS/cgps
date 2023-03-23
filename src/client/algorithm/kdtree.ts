@@ -19,26 +19,27 @@ class Vector3 {
 
 interface Node {
     point: Vector3
+    idx: number
     left: Node | null
     right: Node | null
 }
 
-function insertNode(node: Node, point: Vector3, xyz: number) {
+function insertNode(node: Node, idx: number, point: Vector3, xyz: number) {
     if (
         (xyz == 0 && point.x <= node.point.x) ||
         (xyz == 1 && point.y <= node.point.y) ||
         (xyz >= 2 && point.z <= node.point.z)
     ) {
         if (!node.left) {
-            node.left = { point, left: null, right: null }
+            node.left = { point, idx, left: null, right: null }
         } else {
-            insertNode(node.left, point, (xyz + 1) % 3)
+            insertNode(node.left, idx, point, (xyz + 1) % 3)
         }
     } else {
         if (!node.right) {
-            node.right = { point, left: null, right: null }
+            node.right = { point, idx, left: null, right: null }
         } else {
-            insertNode(node.right, point, (xyz + 1) % 3)
+            insertNode(node.right, idx, point, (xyz + 1) % 3)
         }
     }
 }
@@ -54,7 +55,7 @@ function queryNode(
     distanceSq: number,
     xyz: number,
     box: BBox
-): Vector3[] {
+): number[] {
     let border: number
     let thisBox: BBox
     let thatBox: BBox
@@ -121,21 +122,21 @@ function queryNode(
     if (!thisNode) {
         if (thatNode && thatDist <= distanceSq) {
             const nextQuery = queryNode(thatNode, point, distanceSq, nextXYZ, thatBox)
-            return addThis ? [node.point].concat(nextQuery) : nextQuery
+            return addThis ? [node.idx].concat(nextQuery) : nextQuery
         } else {
-            return addThis ? [node.point] : []
+            return addThis ? [node.idx] : []
         }
     }
 
     if (!thatNode || thatDist > distanceSq) {
         // prune that
         const nextQuery = queryNode(thisNode, point, distanceSq, nextXYZ, thisBox)
-        return addThis ? [node.point].concat(nextQuery) : nextQuery
+        return addThis ? [node.idx].concat(nextQuery) : nextQuery
     } else {
         const thisQuery = queryNode(thisNode, point, distanceSq, nextXYZ, thisBox)
         const thatQuery = queryNode(thatNode, point, distanceSq, nextXYZ, thatBox)
         return addThis
-            ? [node.point].concat(thisQuery).concat(thatQuery)
+            ? [node.idx].concat(thisQuery).concat(thatQuery)
             : thisQuery.concat(thatQuery)
     }
 }
@@ -143,19 +144,20 @@ function queryNode(
 export class KDTree {
     root?: Node
 
-    insert(point: Vector3) {
+    insert(point: Vector3, idx: number) {
         if (!this.root) {
             this.root = {
                 point,
+                idx,
                 left: null,
                 right: null,
             }
         } else {
-            insertNode(this.root, point, 0)
+            insertNode(this.root, idx, point, 0)
         }
     }
 
-    query(point: Vector3, distance: number): Vector3[] {
+    query(point: Vector3, distance: number): number[] {
         if (!this.root) {
             return []
         }

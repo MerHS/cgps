@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { World } from './world'
 import { Bird } from './bird'
 import { Vector3 } from 'three'
+import { KDTree } from '../algorithm/kdtree'
 
 const coneGeo = new THREE.ConeGeometry(0.03, 0.1)
 coneGeo.rotateX(Math.PI / 2)
@@ -27,8 +28,11 @@ export class Flock {
     v2: Vector3
     v3: Vector3
     del2: Vector3
+    useKD: boolean
 
     setting: FlockSetting
+    frameWeight: number
+    frameCnt: number
 
     constructor(count: number, world: World) {
         this.count = count
@@ -41,6 +45,10 @@ export class Flock {
         this.v2 = new Vector3()
         this.v3 = new Vector3()
         this.del2 = new Vector3()
+        this.useKD = false
+
+        this.frameWeight = 0
+        this.frameCnt = 0
 
         this.setting = {
             scale: 1,
@@ -55,9 +63,9 @@ export class Flock {
             const bird = new Bird(mesh)
 
             bird.mesh.position.set(
-                2 * Math.random() - 1,
-                2 * Math.random() - 1,
-                2 * Math.random() - 1
+                3 * Math.random() + 1,
+                3 * Math.random() + 1,
+                3 * Math.random() + 1
             )
             bird.velocity.set(
                 0.02 * Math.random() - 0.01,
@@ -66,6 +74,35 @@ export class Flock {
             )
             this.birds.push(bird)
         }
+    }
+
+    resetSize(size: number) {
+        for (let bird of this.birds) {
+            bird.mesh.geometry.dispose()
+            // bird.mesh.material.dispose()
+            ;(bird.mesh.material as THREE.Material).dispose()
+            bird.mesh.remove()
+            this.world.scene.remove(bird.mesh)
+        }
+
+        this.birds = []
+        for (let i = 0; i < size; i++) {
+            const mesh = new THREE.Mesh(coneGeo, matcapMat)
+            const bird = new Bird(mesh)
+
+            bird.mesh.position.set(
+                3 * Math.random() + 1,
+                3 * Math.random() + 1,
+                3 * Math.random() + 1
+            )
+            bird.velocity.set(
+                0.02 * Math.random() - 0.01,
+                0.02 * Math.random() - 0.01,
+                0.02 * Math.random() - 0.01
+            )
+            this.birds.push(bird)
+        }
+        this.birds.forEach((b) => b.onStart(this.world))
     }
 
     onStart(world: World) {
@@ -77,6 +114,7 @@ export class Flock {
         folder.add(this.setting, 'coherence', 0, 5).step(0.02)
         folder.add(this.setting, 'separation', 0, 5).step(0.02)
         folder.add(this.setting, 'alignment', 0, 5).step(0.02)
+        folder.add(this, 'useKD')
         folder.open()
     }
 
@@ -87,20 +125,48 @@ export class Flock {
 
         const scale = 0.5 * this.setting.scale * deltaScale
 
+        let startTime = Date.now()
+        let kdTree: KDTree
+        if (this.useKD) {
+            kdTree = new KDTree()
+            this.birds.forEach((bird, idx) => {
+                kdTree.insert(bird.mesh.position, idx)
+            })
+        }
+
         for (let bird of this.birds) {
             const pos = bird.mesh.position
             const neighbor: Bird[] = []
 
             this.v2.set(0, 0, 0)
-            for (let birdNext of this.birds) {
-                this.del2.subVectors(birdNext.mesh.position, pos)
-                const dist = this.del2.length()
-                if (dist < 0.1) {
-                    this.v2.sub(this.del2)
+
+            if (this.useKD) {
+                const d2Idx = kdTree!.query(pos, 0.1)
+                const neighborIdx = kdTree!.query(pos, 0.22 * this.setting.visualRange)
+
+                for (let idx of d2Idx) {
+                    const birdNext = this.birds[idx]
+                    this.del2.subVectors(birdNext.mesh.position, pos)
+                    const dist = this.del2.length()
+                    if (dist < 0.1) {
+                        this.v2.sub(this.del2)
+                    }
                 }
 
-                if (dist < 0.22 * this.setting.visualRange) {
-                    neighbor.push(birdNext)
+                for (let idx of neighborIdx) {
+                    neighbor.push(this.birds[idx])
+                }
+            } else {
+                for (let birdNext of this.birds) {
+                    this.del2.subVectors(birdNext.mesh.position, pos)
+                    const dist = this.del2.length()
+                    if (dist < 0.1) {
+                        this.v2.sub(this.del2)
+                    }
+
+                    if (dist < 0.22 * this.setting.visualRange) {
+                        neighbor.push(birdNext)
+                    }
                 }
             }
 
@@ -160,21 +226,21 @@ export class Flock {
 
             // limit position
             if (pos.x < 0) {
-                bird.velocity.x += 0.01
-            } else if (pos.x > 2) {
-                bird.velocity.x -= 0.01
+                bird.velocity.x += 0.02
+            } else if (pos.x > 5) {
+                bird.velocity.x -= 0.02
             }
 
             if (pos.y < 0) {
-                bird.velocity.y += 0.01
-            } else if (pos.y > 2) {
-                bird.velocity.y -= 0.01
+                bird.velocity.y += 0.02
+            } else if (pos.y > 5) {
+                bird.velocity.y -= 0.02
             }
 
             if (pos.z < 0) {
-                bird.velocity.z += 0.01
-            } else if (pos.z > 2) {
-                bird.velocity.z -= 0.01
+                bird.velocity.z += 0.02
+            } else if (pos.z > 5) {
+                bird.velocity.z -= 0.02
             }
 
             // limit velocity
@@ -184,6 +250,21 @@ export class Flock {
             }
 
             bird.onUpdate(delta)
+        }
+        // console.log('loop', Date.now() - startTime)
+
+        this.frameWeight += Date.now() - startTime
+        this.frameCnt += 1
+
+        if (this.frameCnt >= 30) {
+            const meanMS = this.frameWeight / this.frameCnt
+            console.log(
+                'mean latency: ',
+                meanMS.toFixed(3) + 'ms, fps: ',
+                (1000 / meanMS).toFixed(3)
+            )
+            this.frameCnt = 0
+            this.frameWeight = 0
         }
     }
 }

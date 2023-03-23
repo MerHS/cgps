@@ -14,6 +14,7 @@ export class World {
     control: OrbitControls
 
     flock: Flock
+    flockSize: number
     predator: Predator
     obstacles: Obstacle[]
     leader: Leader
@@ -25,7 +26,8 @@ export class World {
         this.gui = new GUI()
         this.control = new OrbitControls(camera, renderer.domElement)
 
-        this.flock = new Flock(200, this)
+        this.flockSize = 50
+        this.flock = new Flock(this.flockSize, this)
         this.predator = new Predator(this)
         this.obstacles = [new Obstacle(this)]
         this.leader = new Leader(this)
@@ -38,6 +40,10 @@ export class World {
             obs.onStart(this)
         }
         this.leader.onStart(this)
+
+        this.gui.add(this, 'flockSize', 30, 2000).onChange((v) => {
+            this.flock.resetSize(v)
+        })
     }
 
     onUpdate(delta: number) {

@@ -84,19 +84,19 @@ export class Predator {
 
         if (pos.x < 0) {
             this.bird.velocity.x += 0.01
-        } else if (pos.x > 2) {
+        } else if (pos.x > 5) {
             this.bird.velocity.x -= 0.01
         }
 
         if (pos.y < 0) {
             this.bird.velocity.y += 0.01
-        } else if (pos.y > 2) {
+        } else if (pos.y > 5) {
             this.bird.velocity.y -= 0.01
         }
 
         if (pos.z < 0) {
             this.bird.velocity.z += 0.01
-        } else if (pos.z > 2) {
+        } else if (pos.z > 5) {
             this.bird.velocity.z -= 0.01
         }
 
