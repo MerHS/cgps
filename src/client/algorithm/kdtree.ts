@@ -54,8 +54,9 @@ function queryNode(
     point: Vector3,
     distanceSq: number,
     xyz: number,
-    box: BBox
-): number[] {
+    box: BBox,
+    result: number[]
+) {
     let border: number
     let thisBox: BBox
     let thatBox: BBox
@@ -119,25 +120,20 @@ function queryNode(
     const addThis = node.point.distanceToSquared(point) <= distanceSq
     const nextXYZ = (xyz + 1) % 3
 
-    if (!thisNode) {
-        if (thatNode && thatDist <= distanceSq) {
-            const nextQuery = queryNode(thatNode, point, distanceSq, nextXYZ, thatBox)
-            return addThis ? [node.idx].concat(nextQuery) : nextQuery
-        } else {
-            return addThis ? [node.idx] : []
-        }
+    if (addThis) {
+        result.push(node.idx)
     }
 
-    if (!thatNode || thatDist > distanceSq) {
+    if (!thisNode) {
+        if (thatNode && thatDist <= distanceSq) {
+            queryNode(thatNode, point, distanceSq, nextXYZ, thatBox, result)
+        }
+    } else if (!thatNode || thatDist > distanceSq) {
         // prune that
-        const nextQuery = queryNode(thisNode, point, distanceSq, nextXYZ, thisBox)
-        return addThis ? [node.idx].concat(nextQuery) : nextQuery
+        queryNode(thisNode, point, distanceSq, nextXYZ, thisBox, result)
     } else {
-        const thisQuery = queryNode(thisNode, point, distanceSq, nextXYZ, thisBox)
-        const thatQuery = queryNode(thatNode, point, distanceSq, nextXYZ, thatBox)
-        return addThis
-            ? [node.idx].concat(thisQuery).concat(thatQuery)
-            : thisQuery.concat(thatQuery)
+        queryNode(thisNode, point, distanceSq, nextXYZ, thisBox, result)
+        queryNode(thatNode, point, distanceSq, nextXYZ, thatBox, result)
     }
 }
 
@@ -162,9 +158,20 @@ export class KDTree {
             return []
         }
 
-        return queryNode(this.root, point, distance * distance, 0, [
-            [-Infinity, -Infinity, -Infinity],
-            [Infinity, Infinity, Infinity],
-        ])
+        let indices: number[] = []
+
+        queryNode(
+            this.root,
+            point,
+            distance * distance,
+            0,
+            [
+                [-Infinity, -Infinity, -Infinity],
+                [Infinity, Infinity, Infinity],
+            ],
+            indices
+        )
+
+        return indices
     }
 }

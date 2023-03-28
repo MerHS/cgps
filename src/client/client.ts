@@ -1,7 +1,5 @@
 import * as THREE from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import Stats from 'three/examples/jsm/libs/stats.module'
-import { GUI } from 'dat.gui'
 
 import { World } from './world/world'
 
@@ -34,8 +32,6 @@ clock.start()
 
 let world = new World(scene, camera, renderer)
 
-function matchGUI() {}
-
 function animate() {
     requestAnimationFrame(animate)
 
@@ -61,4 +57,3 @@ function render() {
 
 world.onStart()
 animate()
-// render()
