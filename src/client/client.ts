@@ -35,8 +35,11 @@ let world = new World(scene, camera, renderer)
 function animate() {
     requestAnimationFrame(animate)
 
-    const delta = clock.getDelta()
-    // interval += delta
+    let delta = clock.getDelta()
+    // cap delta because of focus out
+    if (delta > 0.1) {
+        delta = 0.1
+    }
 
     world.onUpdate(delta)
     stats.update()

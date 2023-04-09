@@ -89,11 +89,12 @@ export class Flock {
         for (let i = 0; i < size; i++) {
             const mesh = new THREE.Mesh(coneGeo, matcapMat)
             const bird = new Bird(mesh)
+            const bound = this.world.boundary
 
             bird.mesh.position.set(
-                3 * Math.random() + 1,
-                3 * Math.random() + 1,
-                3 * Math.random() + 1
+                (bound - 0.2) * Math.random() + 0.2,
+                (bound - 0.2) * Math.random() + 0.2,
+                (bound - 0.2) * Math.random() + 0.2
             )
             bird.velocity.set(
                 0.02 * Math.random() - 0.01,
@@ -124,6 +125,7 @@ export class Flock {
         const deltaScale = delta / (1 / 60)
 
         const scale = 0.5 * this.setting.scale * deltaScale
+        const bound = this.world.boundary
 
         let startTime = Date.now()
         let kdTree: KDTree
@@ -186,7 +188,7 @@ export class Flock {
                 this.v3.copy(this.vcenter)
                 this.v3.divideScalar(neighbor.length)
                 this.v3.sub(bird.velocity)
-                this.v3.multiplyScalar(scale * 0.5 * this.setting.alignment)
+                this.v3.multiplyScalar(scale * 0.7 * this.setting.alignment)
 
                 bird.velocity.add(this.v1)
                 bird.velocity.add(this.v3)
@@ -225,22 +227,46 @@ export class Flock {
             }
 
             // limit position
-            if (pos.x < 0) {
-                bird.velocity.x += 0.02
-            } else if (pos.x > 5) {
-                bird.velocity.x -= 0.02
+            if (pos.x < 0.1) {
+                if (pos.x < 0 && bird.velocity.x < 0) {
+                    bird.velocity.x = 0.02 - bird.velocity.x
+                } else {
+                    bird.velocity.x += 0.05 * (1 - pos.x)
+                }
+            } else if (pos.x > bound - 0.1) {
+                if (pos.x > bound && bird.velocity.x > 0) {
+                    bird.velocity.x = -0.02 - bird.velocity.x
+                } else {
+                    bird.velocity.x -= 0.05 * (1 + pos.x - bound)
+                }
             }
 
-            if (pos.y < 0) {
-                bird.velocity.y += 0.02
-            } else if (pos.y > 5) {
-                bird.velocity.y -= 0.02
+            if (pos.y < 0.1) {
+                if (pos.y < 0 && bird.velocity.y < 0) {
+                    bird.velocity.y = 0.02 - bird.velocity.y
+                } else {
+                    bird.velocity.y += 0.05 * (1 - pos.y)
+                }
+            } else if (pos.y > bound - 0.1) {
+                if (pos.y > bound && bird.velocity.y > 0) {
+                    bird.velocity.y = -0.02 - bird.velocity.y
+                } else {
+                    bird.velocity.y -= 0.05 * (1 + pos.y - bound)
+                }
             }
 
-            if (pos.z < 0) {
-                bird.velocity.z += 0.02
-            } else if (pos.z > 5) {
-                bird.velocity.z -= 0.02
+            if (pos.z < 0.1) {
+                if (pos.z < 0 && bird.velocity.z < 0) {
+                    bird.velocity.z = 0.02 - bird.velocity.z
+                } else {
+                    bird.velocity.z += 0.05 * (1 - pos.z)
+                }
+            } else if (pos.z > bound - 0.1) {
+                if (pos.z > bound && bird.velocity.z > 0) {
+                    bird.velocity.z = -0.02 - bird.velocity.z
+                } else {
+                    bird.velocity.z -= 0.05 * (1 + pos.z - bound)
+                }
             }
 
             // limit velocity

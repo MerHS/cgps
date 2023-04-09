@@ -60,6 +60,7 @@ export class Predator {
         }
 
         const pos = this.bird.mesh.position
+        const bound = this.world.boundary
 
         const neighbor: Bird[] = []
         for (let food of this.world.flock.birds) {
@@ -84,19 +85,19 @@ export class Predator {
 
         if (pos.x < 0) {
             this.bird.velocity.x += 0.01
-        } else if (pos.x > 5) {
+        } else if (pos.x > bound) {
             this.bird.velocity.x -= 0.01
         }
 
         if (pos.y < 0) {
             this.bird.velocity.y += 0.01
-        } else if (pos.y > 5) {
+        } else if (pos.y > bound) {
             this.bird.velocity.y -= 0.01
         }
 
         if (pos.z < 0) {
             this.bird.velocity.z += 0.01
-        } else if (pos.z > 5) {
+        } else if (pos.z > bound) {
             this.bird.velocity.z -= 0.01
         }
 
